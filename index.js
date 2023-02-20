@@ -6,6 +6,7 @@ const app = express();
 const PORT = 3001;
 
 app.use(cors());
+app.use(express.static("build"));
 app.use(express.json());
 
 morgan.token("reqBody", (request, response) => JSON.stringify(request.body));
