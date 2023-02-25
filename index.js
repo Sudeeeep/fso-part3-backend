@@ -3,6 +3,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const Contact = require("./models/persons");
+const { response } = require("express");
 
 const app = express();
 const PORT = process.env.PORT;
@@ -19,28 +20,40 @@ app.use(
   )
 );
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "Person does not exist" });
+  }
+
+  return response.status(400).send({ error: "ERROR" });
+
+  next(error);
+};
+
 app.get("/api/persons", (request, response) => {
   Contact.find({}).then((persons) => response.json(persons));
 });
 
 app.get("/info", (request, response) => {
   const currentDate = new Date();
-  response.send(`<h3>Phonebook has info for ${persons.length} people </h3>
-                  <h3>${currentDate}</h3>`);
+  Contact.countDocuments({}, (err, count) => {
+    response.send(`<h3>Phonebook has info for ${count} people </h3>
+    <h3>${currentDate}</h3>`);
+  });
 });
 
-app.get("/api/persons/:id", (request, response) => {
+app.get("/api/persons/:id", (request, response, next) => {
   Contact.findById(request.params.id)
     .then((person) => response.json(person))
-    .catch((err) => response.status(404).send({ error: "PERSON NOT FOUND" }));
+    .catch((err) => next(err));
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const deletedPerson = persons.find((person) => person.id == id);
-
-  persons = persons.filter((person) => person.id !== id);
-  response.send(`${deletedPerson.name} deleted from server`);
+app.delete("/api/persons/:id", (request, response, next) => {
+  Contact.findByIdAndRemove(request.params.id)
+    .then((person) => response.status(204).end())
+    .catch((err) => next(err));
 });
 
 app.post("/api/persons", (request, response) => {
@@ -60,5 +73,22 @@ app.post("/api/persons", (request, response) => {
 
   newPerson.save().then((savedPerson) => response.json(savedPerson));
 });
+
+app.put("/api/persons/:id", (request, response, next) => {
+  const body = request.body;
+
+  console.log(request.body);
+
+  const person = {
+    name: body.name,
+    number: body.number,
+  };
+
+  Contact.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then((updatedPerson) => response.json(updatedPerson))
+    .catch((err) => next(err));
+});
+
+app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
