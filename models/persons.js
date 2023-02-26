@@ -8,7 +8,7 @@ console.log("Connecting to...", url);
 
 mongoose
   .connect(url)
-  .then((result) => console.log("Connected to MongoDB"))
+  .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.log("Failed to connect to MongoDB:", err.message));
 
 const phoneBookSchema = new mongoose.Schema({

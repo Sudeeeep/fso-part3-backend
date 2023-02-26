@@ -3,7 +3,6 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const Contact = require("./models/persons");
-const { response } = require("express");
 
 const app = express();
 const PORT = process.env.PORT;
@@ -20,7 +19,7 @@ app.use(
   )
 );
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler = (error, request, response) => {
   console.error(error.message);
 
   if (error.name === "CastError") {
@@ -30,8 +29,6 @@ const errorHandler = (error, request, response, next) => {
   }
 
   return response.status(400).send({ error: "ERROR" });
-
-  next(error);
 };
 
 app.get("/api/persons", (request, response) => {
@@ -54,7 +51,7 @@ app.get("/api/persons/:id", (request, response, next) => {
 
 app.delete("/api/persons/:id", (request, response, next) => {
   Contact.findByIdAndRemove(request.params.id)
-    .then((person) => response.status(204).end())
+    .then(() => response.status(204).end())
     .catch((err) => next(err));
 });
 
