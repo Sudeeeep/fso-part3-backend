@@ -12,8 +12,20 @@ mongoose
   .catch((err) => console.log("Failed to connect to MongoDB:", err.message));
 
 const phoneBookSchema = new mongoose.Schema({
-  name: String,
-  number: Number,
+  name: {
+    type: String,
+    minLength: [3, "should be atleast 3 characters long"],
+    required: [true, "can't be blank"],
+  },
+  number: {
+    type: String,
+    minLength: [8, "should have atleast 8 digits"],
+    validate: {
+      validator: (value) => /(\d{2,})-(\d{6,})|(\d{3,})-(\d{5,})/.test(value),
+      message: (props) => `${props.value} is not a valid number format`,
+    },
+    required: [true, "can't be blank"],
+  },
 });
 
 phoneBookSchema.set("toJSON", {
